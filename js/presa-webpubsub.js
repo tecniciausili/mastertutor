@@ -12,6 +12,13 @@
 //   app → ponte: {tipo:'ping'|'accendi'|'spegni', id, prese?, secondi?}
 //   ponte → app: {tipo:'pong'|'ciao'|'esito'|'spenta', id?, ok?, errore?, prese?}
 
+// La funzione delle prese non esiste su questo indirizzo
+class ServizioAssente extends Error {
+  constructor() {
+    super('Su questo indirizzo le prese Tapo non sono disponibili: per comandarle usa l\'app Android (APK) di Mastertutor.');
+  }
+}
+
 const TrasportoWebPubSub = (() => {
   const PROTOCOLLO = 'json.webpubsub.azure.v1';
   const ATTESA_RISPOSTA_MS = 8000;
@@ -28,6 +35,7 @@ const TrasportoWebPubSub = (() => {
   let timerPing = null;
   let ultimoErrore = '';
   let annullaApertura = null;   // interrompe un collegamento non ancora aperto
+  let servizio = null;          // true/false: la funzione api/negotiate esiste su questo indirizzo
   const inAttesa = new Map();
 
   const trasporto = {
@@ -98,7 +106,9 @@ const TrasportoWebPubSub = (() => {
       try {
         dati = JSON.parse(testo);
       } catch (e) {
-        throw new Error('Il servizio della presa non risponde (l\'app va aperta dal suo indirizzo su Azure).');
+        // Pagina HTML o 404: qui la funzione Azure non c'è (per esempio su assistivetech.it)
+        servizio = false;
+        throw new ServizioAssente();
       }
       if (!risposta.ok) {
         throw new Error(dati.errore || `Errore del servizio (${risposta.status}).`);
@@ -108,7 +118,10 @@ const TrasportoWebPubSub = (() => {
         ? 'Nessuna connessione a internet.'
         : e.message;
       notifica();
-      programmaRiconnessione();
+      // Se il servizio non esiste è inutile riprovare
+      if (!(e instanceof ServizioAssente)) {
+        programmaRiconnessione();
+      }
       throw new Error(ultimoErrore);
     }
     if (!attivo) {
@@ -264,6 +277,23 @@ const TrasportoWebPubSub = (() => {
     return esito;
   }
 
+  // La funzione api/negotiate c'è su questo indirizzo? Solo la versione pubblicata su Azure
+  // la ha; altrove (assistivetech.it, npx serve) la PWA funziona in tutto tranne la presa.
+  // Risposta: true, false, oppure null se non si sa (niente internet).
+  async function verificaServizio() {
+    if (servizio !== null) {
+      return servizio;
+    }
+    try {
+      const risposta = await fetch('api/negotiate?ruolo=app&codice=AAAAAAAAAAAA', { cache: 'no-store' });
+      servizio = (risposta.headers.get('content-type') || '').includes('json');
+    } catch (e) {
+      return null;
+    }
+    return servizio;
+  }
+
+  trasporto.verificaServizio = verificaServizio;
   trasporto.leggiConfigurazione = leggiConfigurazione;
   trasporto.salvaConfigurazione = salvaConfigurazione;
   return trasporto;

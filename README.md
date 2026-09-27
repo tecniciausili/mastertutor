@@ -180,6 +180,13 @@ Dopo ogni modifica si aumenta la versione in `service-worker.js` (`CACHE_NAME`) 
 
 ## Note
 
+- **Pubblicata anche su assistivetech.it/webapp/mastertutor** (Aruba, copia preparata con
+  `~/PROGETTTI_SINGOLI_AZURE/webapp/prepara.sh`, senza `ponte/`, `strumenti/` e `api/`). Lì la funzione
+  `api/negotiate` non c'è: la PWA funziona in tutto tranne la presa, e la scheda *Presa* lo spiega
+  rimandando a **Mastertutor Android** (APK), che comanda le prese direttamente. Sullo stesso dominio ci
+  sono altre app: il service worker cancella solo le cache `mastertutor_…` e **Aggiorna App** tocca solo
+  il service worker di questa cartella.
+
 - **YouTube «solo audio»**: il video resta coperto da un'immagine. Le regole di YouTube per i player
   incorporati non consentono di separare l'audio dal video: è una scelta da valutare per un'app pubblica.
 - Da ottobre 2025 YouTube rifiuta l'embed senza `origin` (errore 153): il player lo passa sempre, per

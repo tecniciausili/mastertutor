@@ -22,6 +22,13 @@ const SchedaPresa = (() => {
       .replace(/(.{4})(?=.)/g, '$1-');
   }
 
+  // Pagina delle Web App di AssistiveTech: la cartella sopra, se l'app è in /webapp/
+  function indirizzoWebApp() {
+    return window.location.pathname.includes('/webapp/')
+      ? new URL('../', window.location.href).href
+      : 'https://www.assistivetech.it/webapp/';
+  }
+
   function disegna(contenuto) {
     const conf = Archivio.getImpostazioni().presa;
     const locale = Presa.locale;
@@ -36,6 +43,12 @@ const SchedaPresa = (() => {
           + 'computer nella stessa rete Wi-Fi delle prese. Il ponte mostra un <strong>codice di abbinamento</strong>: '
           + 'scrivilo qui una volta sola, su ogni dispositivo che deve comandare la presa.'}
       </p>
+      <div class="info-box avviso-presa" id="presaAssente" hidden>
+        <i class="bi bi-android2"></i>
+        <p><strong>Su questo indirizzo le prese Tapo non sono disponibili.</strong> Tutto il resto funziona.
+          Per comandare le prese usa <strong>Mastertutor Android</strong> (APK) sul tablet: le comanda
+          direttamente, senza ponte. Lo trovi nella <a href="${Util.escapeHtml(indirizzoWebApp())}" target="_blank" rel="noopener">pagina delle Web App</a>.</p>
+      </div>
       <div class="stato-presa" id="statoPresaBox"><i class="bi"></i> <span></span></div>
       <button type="button" class="btn-secondary btn-configura" data-azione="presa-configura">
         <i class="bi bi-gear-fill"></i> Configura le prese (account Tapo e indirizzi)
@@ -251,6 +264,17 @@ const SchedaPresa = (() => {
     aggiorna();
     if (Presa.stato === 'online') {
       Presa.verifica().catch(() => {});
+    }
+    // Senza il servizio Azure (per esempio su assistivetech.it) il ponte non si può usare
+    if (!locale) {
+      Presa.verificaServizio().then((ok) => {
+        if (ok === false && contenuto.isConnected) {
+          contenuto.querySelector('#presaAssente').hidden = false;
+          contenuto.querySelector('#formPresa').hidden = true;
+          contenuto.querySelector('#statoPresaBox').hidden = true;
+          contenuto.querySelector('[data-azione="presa-configura"]').hidden = true;
+        }
+      });
     }
     return Presa.onCambio((stato) => aggiorna(stato));
   }

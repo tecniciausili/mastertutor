@@ -88,6 +88,11 @@ const Presa = (() => {
     get errore() {
       return trasporto?.errore || '';
     },
+    // false quando su questo indirizzo le prese via ponte non sono disponibili
+    // (l'APK non passa dal servizio: per lui è sempre true)
+    async verificaServizio() {
+      return trasporto?.verificaServizio ? trasporto.verificaServizio() : true;
+    },
     async leggiConfigurazione() {
       if (!this.disponibile() && !this.locale) {
         throw new Error('Il ponte non è collegato.');

@@ -4,7 +4,7 @@
 
 const APP_CONFIG = {
   nome: 'Mastertutor',
-  versione: '1.0.15',
+  versione: '1.0.16',
 };
 window.APP_CONFIG = APP_CONFIG;
 
@@ -158,7 +158,9 @@ const App = (() => {
     }
   }
 
-  // Svuota solo la cache dei file: audio, video e registro restano
+  // Svuota solo la cache dei file di questa app: audio, video e registro restano.
+  // Sullo stesso dominio possono esserci altre app (assistivetech.it/webapp/): i loro
+  // service worker e le loro cache non vanno toccati.
   async function aggiorna() {
     alternaMenu(false);
     if (!confirm('🔄 AGGIORNA APP\n\nScarica l\'ultima versione dell\'applicazione.\n\nAudio, video, impostazioni e registro NON vengono toccati.\n\nContinuare?')) {
@@ -166,12 +168,13 @@ const App = (() => {
     }
     try {
       if ('serviceWorker' in navigator) {
+        const miaCartella = new URL('./', window.location.href).href;
         const registrazioni = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(registrazioni.map((r) => r.unregister()));
+        await Promise.all(registrazioni.filter((r) => r.scope === miaCartella).map((r) => r.unregister()));
       }
       if ('caches' in window) {
         const nomi = await caches.keys();
-        await Promise.all(nomi.map((n) => caches.delete(n)));
+        await Promise.all(nomi.filter((n) => n.startsWith('mastertutor_')).map((n) => caches.delete(n)));
       }
       window.location.reload();
     } catch (e) {

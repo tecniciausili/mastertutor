@@ -2,7 +2,10 @@
 // Strategia: prima la rete per i file dell'app (stessa origine), cache senza rete.
 // I dati (audio, video, impostazioni) NON passano di qui: stanno in
 // localStorage e IndexedDB. YouTube e le chiamate /api vanno sempre in rete.
-const CACHE_NAME = 'mastertutor_v1.0.15';
+// Tutte le cache dell'app iniziano con PREFISSO: sullo stesso dominio (per esempio
+// assistivetech.it/webapp/) ci sono altre app, e le loro cache non vanno toccate.
+const PREFISSO = 'mastertutor_';
+const CACHE_NAME = `${PREFISSO}v1.0.16`;
 const URLS_TO_CACHE = [
   './',
   './index.html',
@@ -44,7 +47,10 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((nomi) => Promise.all(nomi.map((n) => (n !== CACHE_NAME ? caches.delete(n) : null))))
+      // Si cancellano solo le versioni vecchie di questa app
+      .then((nomi) => Promise.all(nomi
+        .filter((n) => n.startsWith(PREFISSO) && n !== CACHE_NAME)
+        .map((n) => caches.delete(n))))
       .then(() => self.clients.claim())
   );
 });
@@ -54,7 +60,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   // Altre origini (YouTube, miniature) e API: gestione normale del browser
-  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/') || request.method !== 'GET') {
+  if (url.origin !== self.location.origin || url.pathname.includes('/api/') || request.method !== 'GET') {
     return;
   }
 
