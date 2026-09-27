@@ -1,0 +1,9 @@
+ffmpeg.wasm - @ffmpeg/ffmpeg 0.12.15 (licenza MIT), file ESM di dist/esm copiati senza modifiche.
+https://github.com/ffmpegwasm/ffmpeg.wasm
+
+Servono a convertire in MP3 i file audio che il browser non sa leggere da solo
+(AMR, WMA, AIFF, video MOV...). Stanno nell'app perche' il "worker" deve avere
+la stessa origine della pagina.
+
+Il motore di conversione (@ffmpeg/core 0.12.10, circa 30 MB, licenza GPL-2.0-or-later)
+NON e' incluso: viene scaricato da cdn.jsdelivr.net solo la prima volta che serve.

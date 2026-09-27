@@ -1,0 +1,11 @@
+{
+  "app": "https://nome-casuale.azurestaticapps.net",
+  "codice": "ABCDEFGHJKLM",
+  "account": {
+    "email": "indirizzo@email.it",
+    "password": "password_account_tapo"
+  },
+  "prese": [
+    { "id": "presa1", "nome": "Ventilatore", "ip": "192.168.1.65" }
+  ]
+}

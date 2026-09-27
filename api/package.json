@@ -1,0 +1,6 @@
+{
+  "name": "mastertutor-api",
+  "version": "1.0.0",
+  "description": "Funzione Azure che rilascia i permessi di collegamento ad Azure Web PubSub (presa smart). Nessuna dipendenza.",
+  "private": true
+}

@@ -1,0 +1,28 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Dipendenze (non usate: app statica pura)
+node_modules/
+
+# Configurazione del ponte: contiene la password dell'account Tapo
+ponte/config.json
+
+# Registro del ponte (avvio automatico su Mac)
+ponte/ponte.log
+
+# Dati personali dell'utente (voci registrate, backup): non vanno nel repository né online
+mp3/
+backup/
+*.mastertutor.json
+
+# Promemoria con le credenziali Tapo (sta fuori dal repository: non copiarlo qui)
+tapo_lavoro*.txt
+
+# Chiavi di firma dell'APK: MAI nel repository
+*.keystore
+*.jks

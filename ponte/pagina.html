@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ponte Mastertutor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primario: #00796B;
+            --scuro: #004D40;
+            --testo: #263238;
+            --tenue: #5f6b72;
+            --pericolo: #c62828;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #26A69A 0%, #00695C 100%);
+            background-attachment: fixed;
+            color: var(--testo);
+            min-height: 100vh;
+            padding: 1.5rem 1rem 3rem;
+        }
+        main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+        header { color: white; text-align: center; margin-bottom: 0.5rem; }
+        header h1 { font-size: 1.7rem; }
+        header p { opacity: 0.9; margin-top: 0.3rem; }
+        section { background: white; border-radius: 16px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        h2 { color: var(--primario); font-size: 1.15rem; margin-bottom: 0.6rem; }
+        p.aiuto { font-size: 0.88rem; color: var(--tenue); line-height: 1.5; margin-bottom: 0.75rem; }
+        .codice {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+            font-size: clamp(2rem, 7vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: var(--scuro);
+            text-align: center;
+            background: #e0f2f1;
+            border-radius: 12px;
+            padding: 0.8rem;
+            margin: 0.4rem 0 0.6rem;
+            user-select: all;
+        }
+        .stato { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.9rem; border-radius: 10px; font-weight: 600; }
+        .stato.ok { background: #e8f5e9; color: #1b5e20; }
+        .stato.attesa { background: #fff8e1; color: #8d6e00; }
+        .stato.errore { background: #fdecea; color: #b71c1c; }
+        .pallino { width: 14px; height: 14px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+        form, .riga { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: flex-end; }
+        label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; flex: 1; min-width: 180px; }
+        input {
+            border: 1px solid rgba(0,121,107,0.3);
+            border-radius: 10px;
+            padding: 0.65rem 0.8rem;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        input:focus { outline: none; border-color: var(--primario); box-shadow: 0 0 0 3px rgba(0,121,107,0.15); }
+        button {
+            border: none;
+            border-radius: 22px;
+            padding: 0.7rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            background: linear-gradient(135deg, #00796B, #26A69A);
+            color: white;
+        }
+        button.secondario { background: #eef2f1; color: var(--testo); }
+        button.pericolo { background: #fdecea; color: var(--pericolo); }
+        button:disabled { opacity: 0.6; cursor: wait; }
+        .prese { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+        .presa { display: flex; align-items: center; gap: 0.6rem; border: 2px solid #e3e8e7; border-radius: 12px; padding: 0.6rem 0.8rem; flex-wrap: wrap; }
+        .presa.accesa { border-color: #FFB300; background: #fff8e1; }
+        .presa .testo { flex: 1; min-width: 160px; }
+        .presa strong { display: block; }
+        .presa small { color: var(--tenue); }
+        .esito { font-size: 0.85rem; margin-top: 0.4rem; min-height: 1.2em; }
+        .esito.ok { color: #1b5e20; }
+        .esito.errore { color: var(--pericolo); }
+        .vuoto { color: var(--tenue); font-size: 0.9rem; }
+        .simulazione { background: #fff3cd; color: #856404; border-radius: 10px; padding: 0.6rem 0.9rem; font-weight: 600; }
+        ol { padding-left: 1.3rem; line-height: 1.7; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <h1>🔌 Ponte Mastertutor</h1>
+        <p>Collega la PWA Mastertutor alle prese Tapo di questa rete</p>
+    </header>
+
+    <div class="simulazione" id="simulazione" hidden>Modalità simulazione: le prese sono finte, nessun comando arriva all'hardware.</div>
+
+    <section>
+        <h2>Codice di abbinamento</h2>
+        <p class="aiuto">Scrivilo in Mastertutor → <strong>Area Educatore</strong> → scheda <strong>Presa</strong>, su ogni computer o tablet che deve comandare le prese.</p>
+        <div class="codice" id="codice">…</div>
+        <div class="stato attesa" id="stato"><span class="pallino"></span><span id="statoTesto">Lettura dello stato…</span></div>
+    </section>
+
+    <section>
+        <h2>1. Indirizzo dell'app su Azure</h2>
+        <p class="aiuto">È l'indirizzo con cui si apre Mastertutor, per esempio <code>https://nome-casuale.azurestaticapps.net</code>.</p>
+        <form id="formApp">
+            <label>Indirizzo
+                <input id="app" type="url" placeholder="https://nome-casuale.azurestaticapps.net" autocomplete="off" required>
+            </label>
+            <button type="submit">Salva</button>
+        </form>
+        <div class="esito" id="esitoApp"></div>
+    </section>
+
+    <section>
+        <h2>2. Account Tapo</h2>
+        <p class="aiuto">Le stesse credenziali con cui si accede all'app Tapo sul telefono. Restano su questo computer (nel file <code>config.json</code>) e non vengono mai inviate ad Azure né ai tablet.</p>
+        <form id="formAccount">
+            <label>Email
+                <input id="email" type="email" autocomplete="off" required>
+            </label>
+            <label>Password
+                <input id="password" type="password" autocomplete="new-password" placeholder="">
+            </label>
+            <button type="submit">Salva</button>
+        </form>
+        <div class="esito" id="esitoAccount"></div>
+    </section>
+
+    <section>
+        <h2>3. Prese</h2>
+        <p class="aiuto">L'indirizzo IP si legge nell'app Tapo: si tocca la presa → ingranaggio → in fondo, <em>Indirizzo IP</em>. Se la presa rifiuta il collegamento, nell'app Tapo va attivata <strong>Compatibilità terze parti</strong>.</p>
+        <div class="prese" id="prese"></div>
+        <form id="formPresa">
+            <label>Nome
+                <input id="nomePresa" type="text" placeholder="Es: Ventilatore" maxlength="60" required>
+            </label>
+            <label>Indirizzo IP
+                <input id="ipPresa" type="text" placeholder="192.168.1.65" inputmode="decimal" required>
+            </label>
+            <button type="submit">Aggiungi presa</button>
+        </form>
+        <div class="esito" id="esitoPresa"></div>
+    </section>
+
+    <section>
+        <h2>Come funziona</h2>
+        <ol>
+            <li>Questo ponte resta acceso su un computer collegato alla stessa rete Wi-Fi delle prese.</li>
+            <li>Si collega da solo ad Azure (sul router non va aperto nulla) e aspetta i comandi di Mastertutor.</li>
+            <li>Quando Mastertutor chiede uno stimolo, il ponte accende la presa e la <strong>rispegne da solo</strong> allo scadere del tempo, anche se il tablet perde la connessione.</li>
+            <li>Chiudendo il ponte (CTRL + C nella finestra nera) le prese vengono spente.</li>
+        </ol>
+        <div class="riga" style="margin-top: 1rem;">
+            <button type="button" class="pericolo" id="nuovoCodice">Genera un nuovo codice</button>
+        </div>
+        <p class="aiuto" style="margin-top: 0.6rem;">Con un nuovo codice i dispositivi abbinati prima non comandano più le prese finché non si inserisce il codice nuovo.</p>
+    </section>
+</main>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    let modificaInCorso = false;
+    const esitiPrese = {};   // ultimo esito di Verifica/Prova per ogni presa (sopravvive agli aggiornamenti)
+
+    const TESTI = {
+        'collegato': ['ok', 'Collegato: pronto a ricevere i comandi dell\'app'],
+        'connessione': ['attesa', 'Collegamento ad Azure in corso…'],
+        'errore': ['errore', 'Non collegato'],
+        'non-configurato': ['errore', 'Manca l\'indirizzo dell\'app (punto 1)'],
+    };
+
+    function escape(testo) {
+        return String(testo ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function chiama(percorso, dati) {
+        const opzioni = dati === undefined ? {} : {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dati),
+        };
+        const risposta = await fetch(percorso, opzioni);
+        const corpo = await risposta.json();
+        if (!risposta.ok) {
+            throw new Error(corpo.errore || `Errore ${risposta.status}`);
+        }
+        return corpo;
+    }
+
+    function esito(id, testo, ok) {
+        $(id).textContent = testo || '';
+        $(id).className = `esito ${testo ? (ok ? 'ok' : 'errore') : ''}`;
+    }
+
+    function mostra(s) {
+        $('simulazione').hidden = !s.simulazione;
+        $('codice').textContent = s.codice;
+        const [classe, testo] = TESTI[s.collegamento] || TESTI.errore;
+        $('stato').className = `stato ${classe}`;
+        $('statoTesto').textContent = testo + (s.errore && s.collegamento !== 'collegato' ? `: ${s.errore}` : '');
+        if (!modificaInCorso) {
+            if (document.activeElement !== $('app')) $('app').value = s.app || '';
+            $('esitoApp').textContent = s.appTemporanea ? 'Indirizzo temporaneo impostato dal server di prova: vale solo finché è acceso.' : $('esitoApp').textContent;
+            if (document.activeElement !== $('email')) $('email').value = s.email || '';
+            $('password').placeholder = s.passwordImpostata ? '•••••••• (già impostata)' : '';
+        }
+        $('prese').innerHTML = s.prese.length === 0
+            ? '<p class="vuoto">Nessuna presa: aggiungila qui sotto.</p>'
+            : s.prese.map((p) => `
+                <div class="presa ${p.accesa ? 'accesa' : ''}" data-id="${escape(p.id)}">
+                    <span>${p.accesa ? '💡' : '🔌'}</span>
+                    <div class="testo"><strong>${escape(p.nome)}</strong><small>${escape(p.ip)}${p.accesa ? ' · accesa' : ''}</small>
+                        <div class="esito ${esitiPrese[p.id] ? (esitiPrese[p.id].ok ? 'ok' : 'errore') : ''}" data-esito>${escape(esitiPrese[p.id]?.testo || '')}</div></div>
+                    <button type="button" class="secondario" data-azione="verifica">Verifica</button>
+                    <button type="button" data-azione="prova">Prova 3 s</button>
+                    <button type="button" class="pericolo" data-azione="elimina">Elimina</button>
+                </div>`).join('');
+    }
+
+    async function aggiorna() {
+        try {
+            mostra(await chiama('/api/stato'));
+        } catch (e) {
+            $('stato').className = 'stato errore';
+            $('statoTesto').textContent = 'Il ponte non risponde: la finestra del ponte è ancora aperta?';
+        }
+    }
+
+    $('formApp').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            mostra(await chiama('/api/app', { app: $('app').value }));
+            esito('esitoApp', 'Salvato: collegamento ad Azure in corso.', true);
+        } catch (err) {
+            esito('esitoApp', err.message, false);
+        }
+    });
+
+    $('formAccount').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            mostra(await chiama('/api/account', { email: $('email').value, password: $('password').value }));
+            $('password').value = '';
+            esito('esitoAccount', 'Account salvato. Usa "Verifica" su una presa per controllarlo.', true);
+        } catch (err) {
+            esito('esitoAccount', err.message, false);
+        }
+    });
+
+    $('formPresa').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            mostra(await chiama('/api/prese/aggiungi', { nome: $('nomePresa').value, ip: $('ipPresa').value }));
+            $('nomePresa').value = '';
+            $('ipPresa').value = '';
+            esito('esitoPresa', 'Presa aggiunta.', true);
+        } catch (err) {
+            esito('esitoPresa', err.message, false);
+        }
+    });
+
+    $('prese').addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-azione]');
+        if (!btn) return;
+        const riga = btn.closest('.presa');
+        const id = riga.dataset.id;
+        const box = riga.querySelector('[data-esito]');
+        const scrivi = (testo, ok) => {
+            esitiPrese[id] = { testo, ok };
+            box.textContent = testo;
+            box.className = `esito ${ok ? 'ok' : 'errore'}`;
+        };
+        btn.disabled = true;
+        modificaInCorso = true;
+        try {
+            if (btn.dataset.azione === 'verifica') {
+                scrivi('Verifica in corso…', true);
+                const r = await chiama('/api/prese/verifica', { id });
+                scrivi(r.ok ? `Raggiunta${r.nome ? ` ("${r.nome}")` : ''}: ora è ${r.acceso ? 'ACCESA' : 'spenta'} · protocollo ${r.protocollo}` : r.errore, r.ok);
+            } else if (btn.dataset.azione === 'prova') {
+                scrivi('Accendo per 3 secondi…', true);
+                const r = await chiama('/api/prese/prova', { id });
+                scrivi(r.ok ? 'Accesa: si spegne da sola tra 3 secondi.' : r.errore, r.ok);
+            } else if (btn.dataset.azione === 'elimina') {
+                if (confirm('Eliminare questa presa dal ponte?')) {
+                    mostra(await chiama('/api/prese/elimina', { id }));
+                }
+            }
+        } catch (err) {
+            scrivi(err.message, false);
+        } finally {
+            btn.disabled = false;
+            modificaInCorso = false;
+        }
+    });
+
+    $('nuovoCodice').addEventListener('click', async () => {
+        if (!confirm('Generare un nuovo codice?\n\nI dispositivi abbinati con il codice attuale non potranno più comandare le prese finché non inserisci quello nuovo.')) return;
+        mostra(await chiama('/api/codice/nuovo', {}));
+    });
+
+    aggiorna();
+    // Aggiorno lo stato ogni 3 secondi, senza ridisegnare mentre si usa una presa
+    setInterval(() => { if (!modificaInCorso) aggiorna(); }, 3000);
+</script>
+</body>
+</html>

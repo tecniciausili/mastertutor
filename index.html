@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#00796B">
+    <meta name="description" content="Mastertutor - stimolazione casuale e ascolto con switch: audio registrati, video YouTube e presa smart">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mastertutor">
+
+    <title>Mastertutor</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+
+    <link rel="stylesheet" href="css/styles.css?v=1.0.15">
+    <link rel="stylesheet" href="assets/fonts/bootstrap-icons/bootstrap-icons.css?v=1.0.15">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <div class="header-actions-left">
+                <button type="button" class="btn-user-options" data-app="opzioni" title="Modalità e opzioni di ascolto" aria-label="Modalità e opzioni">
+                    <i class="bi bi-sliders"></i>
+                </button>
+            </div>
+            <h1 class="app-title">Mastertutor</h1>
+            <button type="button" class="btn-menu" data-app="menu" title="Menu" aria-label="Menu">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="app-main" id="appMain"></main>
+
+    <template id="modelloBenvenuto">
+        <div class="welcome-screen">
+            <div class="welcome-icon"><i class="bi bi-stars"></i></div>
+            <h2>Benvenuto in Mastertutor</h2>
+            <p>Stimolazione e ascolto con <strong>audio registrati</strong>, <strong>video YouTube</strong> e <strong>presa smart</strong></p>
+            <p class="description">Scegli dove entrare:</p>
+            <div class="mode-selection">
+                <button type="button" class="btn-mode btn-educator" data-app="educatore">
+                    <i class="bi bi-person-workspace"></i>
+                    <span>Area Educatore</span>
+                </button>
+                <button type="button" class="btn-mode btn-user" data-app="utente">
+                    <i class="bi bi-headphones"></i>
+                    <span>Area Utente</span>
+                </button>
+            </div>
+            <button type="button" class="btn-primary" data-app="installa">
+                <i class="bi bi-download"></i> Installa l'app su questo dispositivo
+            </button>
+        </div>
+    </template>
+
+    <nav class="side-menu" id="sideMenu" aria-label="Menu">
+        <div class="menu-header">
+            <h3>Menu</h3>
+            <button type="button" class="btn-close-menu" data-app="chiudi-menu" aria-label="Chiudi menu">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <ul class="menu-list">
+            <li><button type="button" data-app="home"><i class="bi bi-house"></i> Schermata iniziale</button></li>
+            <li><button type="button" data-app="configura-prese"><i class="bi bi-gear"></i> Configura le prese</button></li>
+            <li><button type="button" data-app="esporta"><i class="bi bi-box-arrow-up"></i> Esporta dati</button></li>
+            <li><button type="button" data-app="importa"><i class="bi bi-box-arrow-in-down"></i> Importa dati</button></li>
+            <li><button type="button" data-app="istruzioni"><i class="bi bi-question-circle"></i> Come funziona</button></li>
+            <li><button type="button" data-app="informazioni"><i class="bi bi-info-circle"></i> Informazioni</button></li>
+            <li><button type="button" data-app="aggiorna" class="menu-aggiorna"><i class="bi bi-arrow-repeat"></i> Aggiorna App</button></li>
+        </ul>
+        <input type="file" id="fileImporta" accept="application/json,.json" hidden>
+    </nav>
+    <div class="overlay" id="overlay" data-app="chiudi-menu"></div>
+
+    <div class="modal" id="instructionsModal" role="dialog" aria-modal="true" aria-labelledby="titoloIstruzioni">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titoloIstruzioni"><i class="bi bi-question-circle"></i> Come funziona</h3>
+                <button type="button" class="btn-close-modal" data-app="chiudi-finestra" data-finestra="instructionsModal" aria-label="Chiudi">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Area Educatore</h4>
+                <ul>
+                    <li><strong>Audio</strong>: registra la voce con il microfono del dispositivo o carica un file (anche i vocali WhatsApp).</li>
+                    <li><strong>YouTube</strong>: scrivi la categoria, scegli il video e incolla il link. Puoi far sentire solo l'audio e impostare inizio e fine.</li>
+                    <li><strong>Anticipatore</strong>: l'audio che avvisa che sta per arrivare uno stimolo.</li>
+                    <li><strong>Presa</strong>: collegamento alla presa smart.</li>
+                    <li><strong>Tempi</strong>: attese casuali, durata massima, tipi di stimolo.</li>
+                    <li><strong>Registro</strong>: le sessioni svolte e le risposte dell'utente.</li>
+                </ul>
+                <h4>Area Utente</h4>
+                <ul>
+                    <li><strong>Stimolazione casuale</strong>: dopo un'attesa casuale suona l'anticipatore e parte uno stimolo a caso.</li>
+                    <li><strong>Stimolo su richiesta</strong>: dopo l'anticipatore lo stimolo parte solo se l'utente preme lo switch.</li>
+                    <li><strong>Ascolto con switch</strong>: diretto, random, temporizzato, timer persistente e navigazione assistita.</li>
+                </ul>
+                <p>Le modalità si scelgono con il pulsante <i class="bi bi-sliders"></i> in alto a sinistra.</p>
+                <h4>Switch</h4>
+                <p><strong>SPAZIO</strong>, <strong>INVIO</strong>, le <strong>frecce</strong> (Makey Makey, switch USB o Bluetooth) oppure un <strong>tocco sullo schermo</strong>. Con il doppio switch la <strong>freccia destra</strong> fa sentire gli audio registrati.</p>
+                <div class="info-box">
+                    <i class="bi bi-lightbulb"></i>
+                    <p><strong>Importante:</strong> audio, video e registro sono salvati <strong>su questo dispositivo</strong>. Non cancellare i dati di navigazione del browser.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" data-app="chiudi-finestra" data-finestra="instructionsModal">Ho capito</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="titoloInfo">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="titoloInfo"><i class="bi bi-info-circle"></i> Informazioni</h3>
+                <button type="button" class="btn-close-modal" data-app="chiudi-finestra" data-finestra="infoModal" aria-label="Chiudi">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Mastertutor</h4>
+                <p>Stimolazione casuale e ascolto con switch. Autonoma: tutti i dati restano su questo dispositivo.</p>
+                <p><strong>Versione:</strong> <span id="infoVersione">-</span></p>
+                <p id="infoStorage"><strong>Spazio dati:</strong> calcolo in corso…</p>
+                <div class="info-box">
+                    <i class="bi bi-hdd"></i>
+                    <p>Video YouTube e impostazioni sono nel localStorage, gli audio in IndexedDB del browser di questo dispositivo.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" data-app="chiudi-finestra" data-finestra="infoModal">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <script src="js/lib/lame.min.js"></script>
+    <script src="js/util.js?v=1.0.15"></script>
+    <script src="js/archivio.js?v=1.0.15"></script>
+    <script src="js/elabora-audio.js?v=1.0.15"></script>
+    <script src="js/presa.js?v=1.0.15"></script>
+    <script src="js/presa-webpubsub.js?v=1.0.15"></script>
+    <script src="js/presa-nativa.js?v=1.0.15"></script>
+    <script src="js/riproduttore.js?v=1.0.15"></script>
+    <script src="js/ordinabile.js?v=1.0.15"></script>
+    <script src="js/scheda-presa.js?v=1.0.15"></script>
+    <script src="js/configura-prese.js?v=1.0.15"></script>
+    <script src="js/educatore.js?v=1.0.15"></script>
+    <script src="js/utente.js?v=1.0.15"></script>
+    <script src="js/app.js?v=1.0.15"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js?v=1.0.15')
+                    .then((registrazione) => {
+                        // update() può fallire se nel frattempo il service worker è stato rimosso
+                        setInterval(() => registrazione.update().catch(() => {}), 60000);
+                    })
+                    .catch((errore) => console.error('Service worker non registrato:', errore));
+            });
+        }
+    </script>
+</body>
+</html>

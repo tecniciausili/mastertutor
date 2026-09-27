@@ -1,0 +1,40 @@
+{
+    "navigationFallback": {
+        "rewrite": "/index.html",
+        "exclude": [
+            "/assets/*",
+            "/css/*",
+            "/js/*",
+            "/api/*",
+            "/*.png",
+            "/*.json",
+            "/service-worker.js"
+        ]
+    },
+    "globalHeaders": {
+        "Permissions-Policy": "microphone=(self)"
+    },
+    "mimeTypes": {
+        ".json": "application/json",
+        ".woff2": "font/woff2",
+        ".mp3": "audio/mpeg"
+    },
+    "routes": [
+        {
+            "route": "/ponte/*",
+            "statusCode": 404
+        },
+        {
+            "route": "/strumenti/*",
+            "statusCode": 404
+        },
+        {
+            "route": "/mp3/*",
+            "statusCode": 404
+        },
+        {
+            "route": "/backup/*",
+            "statusCode": 404
+        }
+    ]
+}

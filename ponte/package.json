@@ -1,0 +1,15 @@
+{
+  "name": "ponte-mastertutor",
+  "version": "1.0.0",
+  "description": "Ponte tra la PWA Mastertutor (via Azure Web PubSub) e le prese Tapo della rete locale",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "avvia": "node ponte.js",
+    "simula": "node ponte.js --simula",
+    "prove": "node prove/prove.js"
+  }
+}
