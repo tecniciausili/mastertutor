@@ -98,6 +98,9 @@ function httpPost(host, path, body, cookie = null, timeout = 5000) {
             path: path,
             method: 'POST',
             timeout: timeout,
+            // Connessione nuova per ogni richiesta, come in passthrough.js: le prese chiudono
+            // le connessioni senza avvisare e riusarne una chiusa dà "socket hang up"
+            agent: false,
             headers: {
                 'Content-Length': body.length,
                 'Content-Type': 'application/octet-stream',
@@ -157,10 +160,16 @@ class TapoDevice {
         const hs1 = await httpPost(this.ip, '/app/handshake1', localSeed);
 
         if (hs1.status === 403) {
-            throw new Error('403 Forbidden - Attiva "Compatibilità terze parti" nell\'app Tapo');
+            throw new Error('HTTP 403: compatibilità con terze parti spenta');
         }
         if (hs1.status !== 200) {
             throw new Error(`Handshake1 fallito: HTTP ${hs1.status}`);
+        }
+
+        // Risposta giusta: 16 byte di seme e 32 di hash. Altro (pagina HTML, vuota...) vuol dire
+        // che la presa non parla KLAP: con i firmware 1.4.x succede se è spenta la compatibilità
+        if (hs1.body.length !== 48) {
+            throw new Error(`KLAP non disponibile (risposta di ${hs1.body.length} byte)`);
         }
 
         const remoteSeed = hs1.body.subarray(0, 16);

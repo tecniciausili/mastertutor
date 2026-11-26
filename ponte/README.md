@@ -194,7 +194,8 @@ ponte/
 | «Il ponte richiede Node.js 22» | Installare Node.js LTS da <https://nodejs.org> |
 | «L'indirizzo … non risponde come Mastertutor» | Indirizzo dell'app sbagliato: copiarlo dalla barra del browser quando Mastertutor è aperto |
 | «Il servizio della presa non è ancora configurato su Azure» | Su Azure manca l'impostazione `WEBPUBSUB_CONNECTION_STRING` (vedi il README dell'app) |
-| «La presa rifiuta il collegamento» | Nell'app Tapo attivare **Compatibilità terze parti** (impostazioni della presa, in fondo) |
+| «La presa non accetta comandi da altri programmi» | Nell'app Tapo del telefono: **Io → Servizi di terze parti → Compatibilità con terze parti**, attivarla; poi staccare e riattaccare la presa. Le P110 con firmware 1.4.x senza questa impostazione usano un protocollo (TPAP) che il ponte non può usare |
+| «La presa a questo indirizzo non accetta collegamenti» | Presa appena attaccata: il ponte la «sveglia» con la scoperta UDP (porta 20002) e riprova per 15 s; se continua, controllare l'IP nell'app Tapo |
 | «Email o password non corrispondono» | Usare le credenziali dell'**account Tapo**, non una password della presa |
 | «Indirizzo irraggiungibile» | Il computer del ponte non è sulla stessa rete Wi-Fi delle prese |
 | In Mastertutor: «il ponte non risponde» | Il ponte è spento, o il suo computer non ha internet. Appena torna, Mastertutor si ricollega da solo |

@@ -14,6 +14,7 @@
 
 import { TapoDevice } from './klap.js';
 import { TapoPassthroughDevice } from './passthrough.js';
+import { scopriPresa } from './scoperta.js';
 
 const ATTESA_MINIMA_MS = 500;
 
@@ -51,6 +52,34 @@ function inFila(ip, operazione) {
   return eseguita;
 }
 
+// Dopo il messaggio di scoperta il servizio locale di una presa appena accesa parte in circa 12 s
+const TENTATIVI_AVVIO = 6;
+const ATTESA_AVVIO_MS = 3000;
+
+async function prova(Classe, ip, email, password) {
+  const apparecchio = new Classe(ip, email, password);
+  await apparecchio.getInfo();
+  return apparecchio;
+}
+
+/** Una prova di collegamento con i due protocolli, nell'ordine suggerito dalla scoperta. */
+async function collega(ip, email, password, protocolloScoperto) {
+  const ordine = protocolloScoperto === 'AES'
+    ? [['passthrough', TapoPassthroughDevice], ['klap', TapoDevice]]
+    : [['klap', TapoDevice], ['passthrough', TapoPassthroughDevice]];
+  const errori = {};
+  for (const [nome, Classe] of ordine) {
+    try {
+      return { protocollo: nome, apparecchio: await prova(Classe, ip, email, password) };
+    } catch (e) {
+      errori[nome] = e;
+    }
+  }
+  const errore = new Error(descriviErrore(errori.klap, errori.passthrough));
+  errore.rifiutata = [errori.klap, errori.passthrough].every((e) => String(e?.message || e).includes('ECONNREFUSED'));
+  throw errore;
+}
+
 async function apri(presa) {
   const chiave = chiaveDi(presa);
   const esistente = sessioni.get(presa.ip);
@@ -59,24 +88,32 @@ async function apri(presa) {
   }
 
   const { ip, email, password } = presa;
-  try {
-    const apparecchio = new TapoDevice(ip, email, password);
-    await apparecchio.getInfo();
-    const sessione = { chiave, protocollo: 'klap', apparecchio };
-    sessioni.set(ip, sessione);
-    return sessione;
-  } catch (erroreKlap) {
+  // Messaggio di scoperta: «sveglia» il servizio locale delle P110 con firmware 1.4.x
+  // (senza, dopo l'accensione resta spento per 8-9 minuti) e dice quale protocollo usano
+  const scoperta = await scopriPresa(ip);
+  if (scoperta?.protocollo === 'TPAP') {
+    throw new Error(MESSAGGIO_TERZE_PARTI);
+  }
+
+  for (let n = 1; ; n++) {
     try {
-      const apparecchio = new TapoPassthroughDevice(ip, email, password);
-      await apparecchio.getInfo();
-      const sessione = { chiave, protocollo: 'passthrough', apparecchio };
+      const { protocollo, apparecchio } = await collega(ip, email, password, scoperta?.protocollo);
+      const sessione = { chiave, protocollo, apparecchio };
       sessioni.set(ip, sessione);
       return sessione;
-    } catch (errorePassthrough) {
-      throw new Error(descriviErrore(erroreKlap, errorePassthrough));
+    } catch (errore) {
+      // La presa c'è (ha risposto alla scoperta) ma il servizio locale sta ancora partendo
+      if (!(errore.rifiutata && scoperta && n < TENTATIVI_AVVIO)) {
+        throw errore;
+      }
+      await attendi(ATTESA_AVVIO_MS);
     }
   }
 }
+
+const MESSAGGIO_TERZE_PARTI = 'La presa non accetta comandi da altri programmi. Nell\'app Tapo del telefono: '
+  + 'Io (in basso a destra) → Servizi di terze parti → attivare «Compatibilità con terze parti»; '
+  + 'poi staccare e riattaccare la presa e premere di nuovo «Salva».';
 
 /** Traduce in una frase leggibile il fallimento di entrambi i protocolli. */
 export function descriviErrore(erroreKlap, errorePassthrough) {
@@ -85,9 +122,12 @@ export function descriviErrore(erroreKlap, errorePassthrough) {
   // Le prese con firmware vecchio non conoscono KLAP (404): conta l'errore dell'altro protocollo
   const testo = testoKlap.includes('HTTP 404') ? testoPassthrough : testoKlap;
 
-  if (testoKlap.includes('403')) {
-    return 'La presa rifiuta il collegamento. Nell\'app Tapo del telefono va attivata '
-      + '"Compatibilita\' terze parti" (Impostazioni della presa, in fondo).';
+  // 403 a KLAP, oppure la presa risponde ma né KLAP né AES vanno (pagina HTML, AES rifiutato
+  // con 1003...): così i firmware recenti dicono che la compatibilità con terze parti è spenta
+  const rispondeMaNonParla = testoKlap.includes('KLAP non disponibile')
+    && /HTTP 404|Passthrough (handshake|risposta)/.test(testoPassthrough);
+  if (testoKlap.includes('403') || rispondeMaNonParla) {
+    return MESSAGGIO_TERZE_PARTI;
   }
   if (testo.includes('hash mismatch')) {
     return 'Email o password non corrispondono all\'account Tapo. '
@@ -97,7 +137,9 @@ export function descriviErrore(erroreKlap, errorePassthrough) {
     return 'Indirizzo irraggiungibile: la presa non e\' sulla stessa rete del computer.';
   }
   if (testo.includes('ECONNREFUSED')) {
-    return 'Nessuna presa risponde a questo indirizzo.';
+    return 'La presa a questo indirizzo non accetta collegamenti: se è stata appena attaccata, '
+      + 'aspettare un minuto e riprovare; altrimenti controllare l\'indirizzo IP nell\'app Tapo '
+      + '(Impostazioni della presa → Informazioni dispositivo).';
   }
   if (testo.includes('Timeout') || testo.includes('ETIMEDOUT')) {
     return 'La presa non risponde: controllare che l\'indirizzo sia corretto e che la presa sia alimentata.';
